@@ -1,74 +1,33 @@
-from typing import Any, Annotated, Union
+from typing import Any
 from dataclasses import dataclass
-from langchain_classic.agents import create_openai_tools_agent, AgentExecutor
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.tools import StructuredTool
-from langchain_openai import ChatOpenAI
-from langchain.tools import tool, InjectedToolArg
+from langchain.agents import create_agent
+from langchain.tools import tool
+from langchain_community.tools import DuckDuckGoSearchResults
 from langchain_core.messages import SystemMessage, HumanMessage
-from merakiapi import GetItemById, GetChampionByName, SummarizeItem, SummarizeChampion
+from langgraph.prebuilt import ToolRuntime
 from riotapi import GetAccount, GetMatchIds, GetMatch, Continent, SummarizeMatch
 import streamlit as st
 
 
 @dataclass
 class UserContext:
-    Account: Any
-    Continent: Continent
+    account: Any
+    continent: Continent
+
+
+Search = DuckDuckGoSearchResults()
 
 
 @tool
-def GetItemByIdTool(item_id: Union[str, int]) -> Any:
-    """
-    Returns information about an item given its ID.
-    Use this tool to get an item's name and description.
-    """
-    item = GetItemById(item_id)
-    if item:
-        return SummarizeItem(item)
+def GetRecentMatchTool(runtime: ToolRuntime[UserContext]):
+    """Retrieve the user's most recent match data."""
+    match_ids = GetMatchIds(runtime.context.continent, runtime.context.account["puuid"])
 
-
-@tool
-def GetChampionByNameTool(champion_name: str) -> Any:
-    """
-    Returns information about a champion given its name.
-    Pass champion name to get information about that champion.
-    """
-    champion = GetChampionByName(champion_name)
-    if champion:
-        return SummarizeChampion(champion)
-
-
-@tool
-def GetRecentMatchTool(context: Annotated[UserContext, InjectedToolArg]):
-    """
-    Returns information about the user's most recent match.
-    """
-    match_ids = GetMatchIds(context.Continent, context.Account)
     if match_ids and len(match_ids) > 0:
-        match = GetMatch(context.Continent, match_ids[0])
-        return SummarizeMatch(match, context.Account["puuid"])
+        match = GetMatch(runtime.context.continent, match_ids[0])
+        return SummarizeMatch(match, runtime.context.account["puuid"])
 
     return "Match not found"
-
-
-def CreateAgent(tools):
-    llm = ChatOpenAI(
-        model="gpt-4o-mini",
-        temperature=0.30,
-        max_tokens=700,
-        frequency_penalty=0.50,
-    )
-
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are a professional League of Legends coach."),
-        MessagesPlaceholder(variable_name="messages"),
-        MessagesPlaceholder(variable_name="agent_scratchpad"),
-    ])
-
-    agent = create_openai_tools_agent(llm, tools, prompt)
-
-    return AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 
 def Ask(continent: Continent, game_name: str, tag_line: str):
@@ -76,35 +35,39 @@ def Ask(continent: Continent, game_name: str, tag_line: str):
     if not account:
         return "I wasn't able to find your account. Please check your spelling and try again."
 
-    context = UserContext(account, continent)
-
-    tools = [
-        StructuredTool.from_function(
-            name="GetRecentMatchTool",
-            func=lambda: GetRecentMatchTool.invoke({"context": context}),
-            description="Returns information about the user's most recent match."
-        ),
-        GetItemByIdTool,
-        GetChampionByNameTool,
-    ]
-
-    agent = CreateAgent(tools)
+    agent = create_agent(
+        model="gpt-4o-mini",
+        tools=[
+            GetRecentMatchTool,
+            Search
+        ],
+        context_schema=UserContext
+    )
 
     messages: Any = {
         "messages":[
             SystemMessage(content=(
-                f"You are assisting user {account["puuid"]}. "
-                "You have access to the following tools: "
-                "1. GetRecentMatchTool: To find the latest match data. "
-                "2. GetChampionByNameTool: To understand a champion's kit. "
-                "3. GetItemByIdTool: To find the names of items. You will find the item IDs in the recent match data, but you will need this tool to get the name. "
-                "Using all your tools, analyze the user's performance and provide strategic advice."
+                "You are a professional League of Legends coach."
+                "Use your search tool to find information about League of Legends when needed."
+                f"You are assisting puuid {account["puuid"]}, but address them as {game_name}. "
             )),
-            HumanMessage(content="Looking at the champion I played and the items I built, what did I do well, and what could I do to improve?"),
+            HumanMessage(content=(
+                "I need a detailed review of my last match. Please analyze and provide a section for each of the following:\n"
+                "1. Itemization: Based on my opponents' builds and damage types, were my items optimal?\n"
+                "2. Map Positioning: Look at my death locations and objective participation. Was I in the right spots?\n"
+                "3. Vision: Analyze my ward placement and vision score. Was it efficient?"
+            ))
         ]
     }
 
-    return agent.invoke(messages)["output"]
+    response = agent.invoke(
+        messages,
+        context=UserContext(account, continent),
+    )
+
+    print(response)
+
+    return response["messages"][-1].content
 
 
 if __name__ == "__main__":

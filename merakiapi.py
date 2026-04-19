@@ -23,7 +23,6 @@ def SummarizeItem(item: Any) -> Any:
 
 def SummarizeChampion(champion: Any) -> Any:
     return {
-        "name": champion["name"],
         "title": champion["title"],
         "roles": champion["roles"],
         "attributeRatings": champion["attributeRatings"],

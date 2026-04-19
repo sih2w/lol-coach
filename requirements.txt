@@ -4,3 +4,5 @@ langchain~=1.2.15
 requests~=2.33.1
 streamlit~=1.56.0
 langchain_classic~=1.0.4
+langgraph~=1.1.8
+langchain-community~=0.4.1
