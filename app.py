@@ -55,8 +55,9 @@ def GetRecentMatchTool(context: Annotated[UserContext, InjectedToolArg]):
 def CreateAgent(tools):
     llm = ChatOpenAI(
         model="gpt-4o-mini",
-        temperature=0.8,
-        max_tokens=1000,
+        temperature=0.30,
+        max_tokens=700,
+        frequency_penalty=0.50,
     )
 
     prompt = ChatPromptTemplate.from_messages([
