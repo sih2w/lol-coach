@@ -95,14 +95,15 @@ def Ask(continent: Continent, game_name: str, tag_line: str):
                 You are assisting {account["puuid"]}.
                 Address them by their game name.
                 Use GetRecentMatchTool to retrieve the most recent match.
-                Use GetItemByIdTool to get the names of the user's items.
-                Use GetChampionByNameTool to get insights about the user's champion. 
+                Use GetItemByIdTool to map item IDs to item names.
+                Use GetChampionByNameTool to map champion names to champion abilities. 
             """),
             HumanMessage(content="""
                 Give me an overview of my last match.
-                Did I build the correct items this game, and if not, what items should I have been building?
-                How was my map positioning? Did I ward in the correct places? Was I helping my team with objectives?
-                What suggestions do you have specifically for my champion? Did I play show good mechanical skill?
+                Who was my opponent? How did I do against them early?
+                What items did I build? Should I have built different items?
+                How was my map positioning? Did I rotate for objectives?
+                What suggestions do you have specifically for my champion? Was I using my abilities efficiently?
             """)
         ]
     }
