@@ -90,21 +90,18 @@ def Ask(continent: Continent, game_name: str, tag_line: str):
     agent = CreateAgent(tools)
 
     messages: Any = {
-        "messages": [
-            SystemMessage(f"""
-                You are assisting {account["puuid"]}.
-                Address them by their game name.
-                Use GetRecentMatchTool to retrieve the most recent match.
-                Use GetItemByIdTool to map item IDs to item names.
-                Use GetChampionByNameTool to map champion names to champion abilities. 
-            """),
-            HumanMessage(content="""
-                Give me an overview of my last match.
-                Who was my lane opponent? How did I do against them early?
-                What items did I build? Should I have built different items?
-                How was my map positioning? Did I rotate for objectives?
-                What suggestions do you have specifically for my champion? Was I using my abilities efficiently?
-            """)
+        "messages":[
+            SystemMessage(content=(
+                f"You are assisting user {account['puuid']}. "
+                "You have access to the following tools: "
+                "1. GetRecentMatchTool: To find the latest match data. "
+                "2. GetChampionByNameTool: To map names to abilities. "
+                "3. GetItemByIdTool: To map IDs to names. "
+                "Analyze the user's performance and provide strategic advice."
+            )),
+            # This represents the start of the actual dialogue
+            HumanMessage(content="Give me an overview of my last match and who my lane opponent was. Review the items I purchased. Review my champion's abilities and how I used them."),
+            # After the agent runs, you would append the AIMessage and ToolMessages here
         ]
     }
 
