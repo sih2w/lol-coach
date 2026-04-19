@@ -100,7 +100,7 @@ def Ask(continent: Continent, game_name: str, tag_line: str):
             """),
             HumanMessage(content="""
                 Give me an overview of my last match.
-                Who was my opponent? How did I do against them early?
+                Who was my lane opponent? How did I do against them early?
                 What items did I build? Should I have built different items?
                 How was my map positioning? Did I rotate for objectives?
                 What suggestions do you have specifically for my champion? Was I using my abilities efficiently?
