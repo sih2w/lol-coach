@@ -6,3 +6,4 @@ streamlit~=1.56.0
 langchain_classic~=1.0.4
 langgraph~=1.1.8
 langchain-community~=0.4.1
+ddgs~=9.14.0
