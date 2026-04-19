@@ -1,30 +1,30 @@
 import os
 import requests
-from typing import Optional, Literal, List, Dict, Any, TypedDict
+from typing import Optional, Literal, List, Any
 
 
 Continent = Literal["AMERICAS", "ASIA", "EUROPE"]
-
-
-Region = Literal["NA1", "EUN1", "EUW1", "JP1", "KR", "LA1", "ME1", "OC1", "RU", "SG2", "TR1", "TW2", "VN2"]
 
 
 RIOT_API_KEY = os.environ.get("RIOT_API_KEY")
 
 
 def GetAccount(continent: Continent, game_name: str, tag_line: str) -> Optional[Any]:
+    continent = continent.upper()
     response = requests.get(f"https://{continent}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{game_name}/{tag_line}?api_key={RIOT_API_KEY}")
     if response.status_code == 200:
         return response.json()
 
 
 def GetMatchIds(continent: Continent, account: Any) -> Optional[List[str]]:
+    continent = continent.upper()
     response = requests.get(f"https://{continent}.api.riotgames.com/lol/match/v5/matches/by-puuid/{account["puuid"]}/ids?start=0&count=20&api_key={RIOT_API_KEY}")
     if response.status_code == 200:
         return response.json()
 
 
 def GetMatch(continent: Continent, match_id: str) -> Optional[Any]:
+    continent = continent.upper()
     response = requests.get(f"https://{continent}.api.riotgames.com/lol/match/v5/matches/{match_id}?api_key={RIOT_API_KEY}")
     if response.status_code == 200:
         return response.json()
