@@ -2,8 +2,7 @@ import streamlit as st
 from langchain.agents import create_agent, AgentState
 from langchain.agents.middleware import after_model
 from langchain.chat_models import init_chat_model
-from langchain_core.messages import SystemMessage, HumanMessage, RemoveMessage
-from langchain_core.runnables import RunnableConfig
+from langchain_core.messages import HumanMessage, RemoveMessage
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.runtime import Runtime
 from riotapi import Continent
@@ -18,10 +17,11 @@ def get_session_id():
     return "default_session"
 
 @after_model
-def delete_old_messages(state: AgentState, runtime: Runtime) -> dict | None:
+def delete_old_messages(state: AgentState, runtime: Runtime) -> dict:
     messages = state["messages"]
-    if len(messages) > 20:
+    if len(messages) > 15:
         return {"messages": [RemoveMessage(id=m.id) for m in messages[:2]]}
+    return {}
 
 if "agent" not in st.session_state:
     model = init_chat_model(
@@ -42,29 +42,22 @@ if "agent" not in st.session_state:
             search
         ],
         context_schema=UserContext,
-        system_prompt="You are a professional League of Legends coach. Be informative and funny. Limit your conversations to League of Legends."
+        system_prompt="You are a professional League of Legends coach. "
+                      "You are currently assisting {game_name}#{tag_line} (from UserContext). "
+                      "Be informative and funny. Limit your conversations to League of Legends."
     )
 
 def ask(continent: Continent, game_name: str, tag_line: str, prompt: str) -> str:
     session_id = get_session_id()
-    config: RunnableConfig = {"configurable": {"thread_id": session_id}}
+    config = {"configurable": {"thread_id": session_id}}
     context = UserContext(continent, game_name, tag_line)
-
-    input_state = {
-        "messages": [
-            SystemMessage(f"You are assisting {game_name}#{tag_line}."),
-            HumanMessage(content=prompt)
-        ]
-    }
+    input_state = {"messages": [HumanMessage(content=prompt)]}
 
     response = st.session_state.agent.invoke(
         input_state,
         config=config,
         context=context,
     )
-
-    print(response)
-
     return response["messages"][-1].content
 
 if "output" not in st.session_state:
