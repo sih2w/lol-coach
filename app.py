@@ -25,7 +25,7 @@ def delete_old_messages(state: AgentState, runtime: Runtime) -> dict:
 
 if "agent" not in st.session_state:
     model = init_chat_model(
-        "gpt-5.4-nano",
+        "gpt-5.4-mini",
         temperature=0.20,
         timeout=30,
         max_tokens=1000,
