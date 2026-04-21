@@ -155,6 +155,13 @@ class ParticipantChallenges(BaseModel):
 
 
 class User(BaseModel):
+    model_config = ConfigDict(
+        alias_generator=AliasGenerator(
+            validation_alias=to_camel,
+        ),
+        populate_by_name=True
+    )
+
     riot_id_game_name: Optional[str] = None
     riot_id_tagline: Optional[str] = None
     champion_name: Optional[str] = None
@@ -346,7 +353,7 @@ class UserContext:
 
 class MatchData(TypedDict):
     user: User
-    participants: List[Participant]
+    others: List[Participant]
     teams: List[Team]
 
 
@@ -360,7 +367,7 @@ def get_recent_match_data(runtime: ToolRuntime[UserContext]) -> Optional[MatchDa
     League of Legends match played by the user defined in the UserContext.
 
     Returns:
-        MatchData: A dictionary containing 'participants' (List[Participant])
+        MatchData: A dictionary containing 'others' (List[Participant])
         and 'teams' (List[Team]) amd 'user' (User). Returns None if no recent match is found
         or the API request fails.
     """
@@ -381,7 +388,7 @@ def get_recent_match_data(runtime: ToolRuntime[UserContext]) -> Optional[MatchDa
         return None
 
     participants: List[Participant] = []
-    user = User()
+    user = None
 
     for participant in match["info"]["participants"]:
         if participant["puuid"] == account["puuid"]:
@@ -389,10 +396,16 @@ def get_recent_match_data(runtime: ToolRuntime[UserContext]) -> Optional[MatchDa
         else:
             participant = Participant(**participant)
             participants.append(participant)
+    print(user)
+    print("*" * 40)
+    print(participants)
+
+    if not user:
+        return None
 
     return {
         "user": user,
-        "participants": participants,
+        "others": participants,
         "teams": [Team(**team) for team in match["info"]["teams"]],
     }
 
