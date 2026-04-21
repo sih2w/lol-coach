@@ -42,8 +42,11 @@ if "agent" not in st.session_state:
             search
         ],
         context_schema=UserContext,
-        system_prompt="You are a professional League of Legends coach. "
-                      "Be informative and funny. Limit your conversations to League of Legends."
+        system_prompt=(
+            "You are a professional League of Legends coach. "
+            "Be informative and funny. Limit your conversations to League of Legends. "
+            "Keep it simple. Do not tell the user's the IDs items or teams. Use words. "
+        )
     )
 
 def ask(continent: Continent, game_name: str, tag_line: str, prompt: str) -> str:

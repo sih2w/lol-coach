@@ -154,14 +154,7 @@ class ParticipantChallenges(BaseModel):
     ward_takedowns_before20_min: Optional[int] = None
 
 
-class Participant(BaseModel):
-    model_config = ConfigDict(
-        alias_generator=AliasGenerator(
-            validation_alias=to_camel
-        ),
-        populate_by_name=True
-    )
-
+class User(BaseModel):
     riot_id_game_name: Optional[str] = None
     riot_id_tagline: Optional[str] = None
     champion_name: Optional[str] = None
@@ -222,6 +215,27 @@ class Participant(BaseModel):
     summoner1_casts: Optional[int] = None
     summoner2_casts: Optional[int] = None
     challenges: Optional[ParticipantChallenges] = None
+
+
+class Participant(BaseModel):
+    model_config = ConfigDict(
+        alias_generator=AliasGenerator(
+            validation_alias=to_camel
+        ),
+        populate_by_name=True
+    )
+
+    riot_id_game_name: Optional[str] = None
+    riot_id_tagline: Optional[str] = None
+    champion_name: Optional[str] = None
+    team_position: Optional[str] = None
+    team_id: Optional[int] = None
+    puuid: Optional[str] = None
+    kills: Optional[int] = None
+    deaths: Optional[int] = None
+    assists: Optional[int] = None
+    gold_earned: Optional[int] = None
+    gold_spent: Optional[int] = None
 
 
 class Spell(BaseModel):
@@ -331,6 +345,7 @@ class UserContext:
 
 
 class MatchData(TypedDict):
+    user: User
     participants: List[Participant]
     teams: List[Team]
 
@@ -346,7 +361,7 @@ def get_recent_match_data(runtime: ToolRuntime[UserContext]) -> Optional[MatchDa
 
     Returns:
         MatchData: A dictionary containing 'participants' (List[Participant])
-        and 'teams' (List[Team]). Returns None if no recent match is found
+        and 'teams' (List[Team]) amd 'user' (User). Returns None if no recent match is found
         or the API request fails.
     """
     continent = runtime.context.continent
@@ -366,11 +381,17 @@ def get_recent_match_data(runtime: ToolRuntime[UserContext]) -> Optional[MatchDa
         return None
 
     participants: List[Participant] = []
+    user = User()
+
     for participant in match["info"]["participants"]:
-        participant = Participant(**participant)
-        participants.append(participant)
+        if participant["puuid"] == account["puuid"]:
+            user = User(**participant)
+        else:
+            participant = Participant(**participant)
+            participants.append(participant)
 
     return {
+        "user": user,
         "participants": participants,
         "teams": [Team(**team) for team in match["info"]["teams"]],
     }
