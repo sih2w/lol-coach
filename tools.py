@@ -52,7 +52,7 @@ class ParticipantChallenges(BaseModel):
     allied_jungle_monster_kills: Optional[float] = None
     baron_takedowns: Optional[int] = None
     blast_cone_opposite_opponent_count: Optional[int] = None
-    bounty_gold: Optional[int] = None
+    bounty_gold: Optional[float] = None
     buffs_stolen: Optional[int] = None
     complete_support_quest_in_time: Optional[int] = None
     control_wards_placed: Optional[int] = None
@@ -154,7 +154,7 @@ class ParticipantChallenges(BaseModel):
     ward_takedowns_before20_min: Optional[int] = None
 
 
-class ParticipantStats(BaseModel):
+class Participant(BaseModel):
     model_config = ConfigDict(
         alias_generator=AliasGenerator(
             validation_alias=to_camel
@@ -162,6 +162,12 @@ class ParticipantStats(BaseModel):
         populate_by_name=True
     )
 
+    riot_id_game_name: Optional[str] = None
+    riot_id_tagline: Optional[str] = None
+    champion_name: Optional[str] = None
+    team_position: Optional[str] = None
+    team_id: Optional[int] = None
+    puuid: Optional[str] = None
     kills: Optional[int] = None
     deaths: Optional[int] = None
     assists: Optional[int] = None
@@ -215,23 +221,6 @@ class ParticipantStats(BaseModel):
     spell4_casts: Optional[int] = None
     summoner1_casts: Optional[int] = None
     summoner2_casts: Optional[int] = None
-
-
-class Participant(BaseModel):
-    model_config = ConfigDict(
-        alias_generator=AliasGenerator(
-            validation_alias=to_camel
-        ),
-        populate_by_name=True
-    )
-
-    riot_id_game_name: Optional[str] = None
-    riot_id_tagline: Optional[str] = None
-    champion_name: Optional[str] = None
-    team_position: Optional[str] = None
-    team_id: Optional[int] = None
-    puuid: Optional[str] = None
-    stats: Optional[ParticipantStats] = None
     challenges: Optional[ParticipantChallenges] = None
 
 
@@ -378,17 +367,10 @@ def get_recent_match_data(runtime: ToolRuntime[UserContext]) -> Optional[MatchDa
 
     participants: List[Participant] = []
     for participant in match["info"]["participants"]:
-        if participant["puuid"] == account["puuid"]:
-            participant["stats"] = participant
-            participant["challenges"] = participant["challenges"]
-        else:
-            participant["challenges"] = None
-            participant["stats"] = None
         participant = Participant(**participant)
         participants.append(participant)
 
     return {
-        "user"
         "participants": participants,
         "teams": [Team(**team) for team in match["info"]["teams"]],
     }
