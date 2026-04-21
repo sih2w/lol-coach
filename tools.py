@@ -388,6 +388,7 @@ def get_recent_match_data(runtime: ToolRuntime[UserContext]) -> Optional[MatchDa
         participants.append(participant)
 
     return {
+        "user"
         "participants": participants,
         "teams": [Team(**team) for team in match["info"]["teams"]],
     }
