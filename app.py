@@ -1,13 +1,18 @@
 import streamlit as st
 from langchain.agents import create_agent, AgentState
-from langchain.agents.middleware import after_model
+from langchain.agents.middleware import ContextEditingMiddleware, ClearToolUsesEdit
 from langchain.chat_models import init_chat_model
-from langchain_core.messages import HumanMessage, RemoveMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.runtime import Runtime
 from riotapi import Continent
 from tools import get_item_data, get_champion_data, UserContext, search, get_recent_match_data
 from streamlit.runtime.scriptrunner import get_script_run_ctx
+
+
+class CustomAgentState(AgentState):
+    continent: Continent
+    game_name: str
+    tag_line: str
 
 
 def get_session_id():
@@ -16,12 +21,6 @@ def get_session_id():
         return ctx.session_id
     return "default_session"
 
-@after_model
-def delete_old_messages(state: AgentState, runtime: Runtime) -> dict:
-    messages = state["messages"]
-    if len(messages) > 15:
-        return {"messages": [RemoveMessage(id=m.id) for m in messages[:2]]}
-    return {}
 
 if "agent" not in st.session_state:
     model = init_chat_model(
@@ -34,7 +33,16 @@ if "agent" not in st.session_state:
     st.session_state.agent = create_agent(
         model=model,
         checkpointer=InMemorySaver(),
-        middleware=[delete_old_messages],
+        middleware=[
+            ContextEditingMiddleware(
+                edits=[
+                    ClearToolUsesEdit(
+                        trigger=100000,
+                        keep=3,
+                    ),
+                ],
+            ),
+        ],
         tools=[
             get_recent_match_data,
             get_item_data,
