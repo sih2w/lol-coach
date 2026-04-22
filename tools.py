@@ -396,9 +396,6 @@ def get_recent_match_data(runtime: ToolRuntime[UserContext]) -> Optional[MatchDa
         else:
             participant = Participant(**participant)
             participants.append(participant)
-    print(user)
-    print("*" * 40)
-    print(participants)
 
     if not user:
         return None
