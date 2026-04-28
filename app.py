@@ -39,7 +39,7 @@ class Result(BaseModel, Generic[T]):
         return self.error_message is None
 
 
-@st.cache_data
+@st.cache_data(ttl=120)
 def get_account(continent: str, game_name: str, tag_line: str):
     url = f"https://{continent}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{game_name}/{tag_line}"
     response = requests.get(url, params={"api_key": RIOT_API_KEY})
@@ -48,7 +48,7 @@ def get_account(continent: str, game_name: str, tag_line: str):
     response.raise_for_status()
 
 
-@st.cache_data
+@st.cache_data(ttl=120)
 def get_match_ids(continent: Continent, puuid: str):
     continent = continent.upper()
     response = requests.get(f"https://{continent}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count=20&api_key={RIOT_API_KEY}")
@@ -57,7 +57,7 @@ def get_match_ids(continent: Continent, puuid: str):
     response.raise_for_status()
 
 
-@st.cache_data
+@st.cache_data(ttl=120)
 def get_match(continent: Continent, match_id: str):
     continent = continent.upper()
     response = requests.get(f"https://{continent}.api.riotgames.com/lol/match/v5/matches/{match_id}?api_key={RIOT_API_KEY}")
@@ -66,7 +66,7 @@ def get_match(continent: Continent, match_id: str):
     response.raise_for_status()
 
 
-@st.cache_data
+@st.cache_data(ttl=120)
 def get_match_frames(match_id: str):
     response = requests.get(f"https://americas.api.riotgames.com/lol/match/v5/matches/{match_id}/timeline?api_key={RIOT_API_KEY}")
     if response.status_code == 200:
