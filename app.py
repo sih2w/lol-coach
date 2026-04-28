@@ -353,9 +353,9 @@ def get_agent():
         )
     )
 
-_, middle_column, _ = st.columns([1, 3, 1])
-with middle_column:
-    st.title("Coaching Assistant", text_alignment="center")
+st.title("Coaching Assistant", text_alignment="center")
+st.markdown(":gray[Analyzes Your Most Recent League of Legends Game]", text_alignment="center")
+st.divider()
 
 left_column, middle_column, right_column = st.columns([2, 3, 1.50])
 with left_column:
@@ -365,6 +365,7 @@ with middle_column:
 with right_column:
     st.text_input("Tag Line", max_chars=5, key="tag_line", placeholder="00000")
 
+st.divider()
 with st.container(
         horizontal=False,
         horizontal_alignment="center",
